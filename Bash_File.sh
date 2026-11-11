@@ -24,12 +24,29 @@
  
 #Expected User CommandLine for option 2
 # Using -i indicates the user wishes to check the integrity of a given backup file.
+# ./Bash_File.sh -i backupFile.tar
 
 #Expected User CommandLine for option 3
 # Using -r indicates a user wishes to restore to a prior backup of a certain directory
+# ./Bash_File.sh -r directoryName
+# Will prompt later which backup version of the directory they want to restore to
 
 #Expected User CommandLine for option 4
-# Using -
+# Using -u indicates a user wants to compare a directory with its backup
+# ./Bash_File.sh -u directoryName
+# Will prompt the user which backup version of the directory they want to compare the directory to
 
 #Expected User CommandLine for option 5
-# Using -s 
+# Using -s indicates a user wishes to schedule automated backups of a provided Directory
+# ./Bash_File.sh -s directoryName
+
+option=$1
+
+if ( "$option" = "-c" )
+	backupFile=$2
+elif ( "$option" )
+else
+	echo "Error. Incorrect option provided. Please use one of five available options."
+	echo "Exiting..."
+	exit 1
+fi
