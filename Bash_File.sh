@@ -41,12 +41,56 @@
 # ./Bash_File.sh -s directoryName
 
 option=$1
+backupFile=$2
 
-if ( "$option" = "-c" )
-	backupFile=$2
-elif ( "$option" )
+if ( "$option" = "-c" ) ; then
+	#backupFile=$2
+elif ( "$option" = "-i" ) ; then
+	#the archive has normal and possibly not normal
+	# output then send it to the 
+	#kali linux black hole where everything get's deleted,
+	#(which is the /dev/null path in the system)
+	#but if 2 (the error output) is present with 1 (regular
+	#output) then the archive integrity is violated because 
+	#there is an error output.
+	if [[ "$backupfile" == *.tar ]] ; then
+		if tar -tf "$backupfile" > /dev/null 2>&1 ; then
+			echo "Archive integrity check passed."
+		else
+   			echo "Archive integrity check failed."
+		fi
+		exit 0
+	elif [[ "$backupfile" == *.gz ]] ; then
+		if tar -tzf "$backupfile" > /dev/null 2>&1 ; then
+			echo "Archive integrity check passed."
+		else
+   			echo "Archive integrity check failed."
+		fi
+		exit 0
+	elif [[ "$backupfile" == *.zip ]] ; then
+		if unzip -t "$backupfile" > /dev/null 2>&1 ; then
+			echo "Archive integrity check passed."
+		else
+   			echo "Archive integrity check failed."
+		fi
+		exit 0
+	else
+		echo "Error. An archive was not provided..."
+		echo "Exiting..."
+		exit 2
+	fi
+elif ( "$option" = "-r" ) ; then
+
 else
 	echo "Error. Incorrect option provided. Please use one of five available options."
 	echo "Exiting..."
 	exit 1
 fi
+exit 0
+
+#References
+
+#For option -i (Checking the integrity of the backup file)
+#-https://linuxvox.com/blog/what-does-dev-null-mean-at-the-end-of-shell-commands/
+#-https://www.geeksforgeeks.org/linux-unix/tar-command-linux-examples/
+#-https://stackoverflow.com/questions/10508843/what-is-dev-null-21 
