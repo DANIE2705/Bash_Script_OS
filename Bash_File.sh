@@ -43,6 +43,7 @@
 option=$1
 backupFile=$2
 
+
 if ( "$option" = "-c" ) ; then
 	#backupFile=$2
 elif ( "$option" = "-i" ) ; then
@@ -81,6 +82,19 @@ elif ( "$option" = "-i" ) ; then
 	fi
 elif ( "$option" = "-r" ) ; then
 
+elif ( "$option" = "-u" ) ; then
+	if ( -e -d "") ; then
+		backupfileUnzip = unzip -t "$backupfile"
+		if "$opiton" = $backupfileUnzip; then
+			echo "The current directory is the same as the back up...\n"
+		else
+			echo "Error occurred ... Exiting.."
+			exit 3
+		fi
+	else
+		echo "Option specified is not a directory or does not... Exiting.."
+		exit 4
+	fi
 else
 	echo "Error. Incorrect option provided. Please use one of five available options."
 	echo "Exiting..."
