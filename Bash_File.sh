@@ -42,31 +42,45 @@
 
 option=$1    # set user's first arguement to option variable
 
-if ( "$option" = "-i" ); then      # if option vairable is -i we are doing integrity check 
+if [[ "$option" = "-i" ]]; then      # if option vairable is -i we are doing integrity check 
 	backupFile=$2				# set backupFile variable to user's second argument
 
-	if ( ! -f "$backupFile" ); then  # check if the provided backup file is a file
+	if [[ ! -f "$backupFile" ]]; then  # check if the provided backup file is a file
 		echo "Error second arguement is not a file"
 		echo "Please use the following syntax:"
 		echo "./Bash_File.sh -i fileName.tar"
 		exit 1
-	elif ( ! -r "$backupFile" ); then  # check if the provided backup file is readable
+	elif [[ ! -r "$backupFile" ]]; then  # check if the provided backup file is readable
 		echo "Error, unable to read given file."
 		echo "Incorrect permissions with file."
 		echo "Please use chmod to edit file permissions."
 		exit 2
-	elif ( ! -s "$backupFile" ); then  # check if backup file is empty
+	elif [[ ! -s "$backupFile" ]]; then  # check if backup file is empty
 		echo "Error backup file is empty."
 		echo "Exiting..."
 		exit 3
 	fi
 
-elif ( "$option" = "-c" | "$option" = "-r" | "$option" = "-u" | "$option" = "-s"); then # if option variable is any of the other options
+elif [[ "$option" = "-c" | "$option" = "-r" | "$option" = "-u" | "$option" = "-s" ]]; then # if option variable is any of the other options
 	directory=$2              # set directory variable to user's second argument
 
-	if ( ! -d "$directory" ); then
-		
-	elif ( ! -)
+	if [[ -z "$directory" ]]; then # if no directory provided use current working directory
+		directory="."
+	fi
+
+	if [[ ! -d "$directory" ]]; then
+		echo "Error, provided directory doesn't exist."
+		echo "Exiting."
+		exit 4
+	elif [[ ! -r "$directory" ]]; then
+		echo "Error, directory unreadable."
+		echo "Incorrect directory permissions. Please use chmod to update directories permissions."
+		exit 5
+	elif [[ ! -x "$directory" ]]; then
+		echo "Error, directory cannot be accessed."
+		echo "Incorrect directory permissions. Please use chmod to update directories permissions."
+		exit 6
+	fi
 
 
 else; then                        # if given input does not match any of the available ones then exit
@@ -75,3 +89,24 @@ else; then                        # if given input does not match any of the ava
 	exit 4
 
 fi
+
+case "$option" in 
+	-c)
+
+		;;
+	-i)
+
+		;;
+	-r)
+
+		;;
+	-u)
+
+		;;
+	-s)
+
+		;;
+	*)
+
+		;;
+esac
