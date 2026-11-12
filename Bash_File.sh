@@ -46,41 +46,55 @@ backupFile=$2
 if ( "$option" = "-c" ) ; then
 	#backupFile=$2
 elif ( "$option" = "-i" ) ; then
-	#the archive has normal and possibly not normal
-	# output then send it to the 
-	#kali linux black hole where everything get's deleted,
-	#(which is the /dev/null path in the system)
-	#but if 2 (the error output) is present with 1 (regular
-	#output) then the archive integrity is violated because 
-	#there is an error output.
-	if [[ "$backupfile" == *.tar ]] ; then
-		if tar -tf "$backupfile" > /dev/null 2>&1 ; then
-			echo "Archive integrity check passed."
+	if (( -e "$option" )) ; then
+			#the archive has normal and possibly not normal
+			# output then send it to the 
+			#kali linux black hole where everything get's deleted,
+			#(which is the /dev/null path in the system)
+			#but if 2 (the error output) is present with 1 (regular
+			#output) then the archive integrity is violated because 
+			#there is an error output.
+			if [[ "$backupfile" == *.tar ]] ; then
+				if tar -tf "$backupfile" > /dev/null 2>&1 ; then
+					echo "Archive integrity check passed."
+				else
+					echo "Archive integrity check failed."
+				fi
+				exit 0
+			elif [[ "$backupfile" == *.gz ]] ; then
+				if tar -tzf "$backupfile" > /dev/null 2>&1 ; then
+					echo "Archive integrity check passed."
+				else
+					echo "Archive integrity check failed."
+				fi
+				exit 0
+			elif [[ "$backupfile" == *.zip ]] ; then
+				if unzip -t "$backupfile" > /dev/null 2>&1 ; then
+					echo "Archive integrity check passed."
+				else
+					echo "Archive integrity check failed."
+				fi
+				exit 0
 		else
-   			echo "Archive integrity check failed."
+			echo "Error. An archive was not provided..."
+			echo "Exiting..."
+			exit 2
 		fi
-		exit 0
-	elif [[ "$backupfile" == *.gz ]] ; then
-		if tar -tzf "$backupfile" > /dev/null 2>&1 ; then
-			echo "Archive integrity check passed."
-		else
-   			echo "Archive integrity check failed."
-		fi
-		exit 0
-	elif [[ "$backupfile" == *.zip ]] ; then
-		if unzip -t "$backupfile" > /dev/null 2>&1 ; then
-			echo "Archive integrity check passed."
-		else
-   			echo "Archive integrity check failed."
-		fi
-		exit 0
 	else
-		echo "Error. An archive was not provided..."
+		echo "This archive does not exsist..."
 		echo "Exiting..."
-		exit 2
+		exit 3
 	fi
 elif ( "$option" = "-r" ) ; then
-
+	if (( -e -d "$option" )) ; then
+		  
+	else
+		echo "This directory does not exsist..."
+		echo "Exiting..."
+		exit 4
+	fi
+elif [ "$option" = "-u" ] ; then
+	
 else
 	echo "Error. Incorrect option provided. Please use one of five available options."
 	echo "Exiting..."
