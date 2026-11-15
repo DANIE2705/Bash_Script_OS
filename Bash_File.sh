@@ -70,15 +70,15 @@ elif [[ "$option" = "-c" || "$option" = "-r" || "$option" = "-u" || "$option" = 
 	if [[ -z "$directory" ]]; then # if no directory provided use current working directory
 		directory="."
 	fi
-	if [[ ! -d "$directory" ]]; then
+	if [[ ! -d "$directory" ]]; then  # if provided path doesn't exist as a directory then exit
 		echo "Error, provided directory doesn't exist."
 		echo "Exiting."
 		exit 4
-	elif [[ ! -r "$directory" ]]; then
+	elif [[ ! -r "$directory" ]]; then   # if the directory doesn't have proper read permissions exit
 		echo "Error, directory unreadable."
 		echo "Incorrect directory permissions. Please use chmod to update directories permissions."
 		exit 5
-	elif [[ ! -x "$directory" ]]; then
+	elif [[ ! -x "$directory" ]]; then # if the directory doesn't have proper execute permissions that allow us to traverse then exit
 		echo "Error, directory cannot be accessed."
 		echo "Incorrect directory permissions. Please use chmod to update directories permissions."
 		exit 6
@@ -94,7 +94,7 @@ if [[ "$option" = "-c" ]]; then
 	if [[ ! -d "$BACKUP_DIR" ]]; then
 		mkdir -p "$BACKUP_DIR"
 
-		if [[ $? -ne 0 ]]; then
+		if [[ $? -ne 0 ]]; then # if the output of the prior if statement is not 0 exit, error at created the directory
 			echo "Error, unable to create backup directory"
 			echo "Exiting..."
 			exit 8
@@ -105,8 +105,16 @@ fi
 
 case "$option" in 
 	-c) # create a compressed backup of directory
+		timestamp=$(date +"%Y-%m-%d_%H%M%S")
+		backupFile="${BACKUP_DIR}/${directory}_${timestamp}.tar.gz"
 		echo "Compressing and archiving $directory ..."
-		tar -czvf "$directory".tar.gz "$directory"
+		if tar -czvf "$backupFile" "$directory"; then
+			echo "Backup created."
+		else
+			echo "An error occured while creating a backup."
+			echo "Backup failed."
+			rm -f "$backupFile"
+		fi
 		;;
 	-i)
 		
