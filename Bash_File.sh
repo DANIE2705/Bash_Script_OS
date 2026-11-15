@@ -42,8 +42,11 @@
 
 option=$1    # set user's first arguement to option variable
 
+# Make sure that path for automated cron backups is realtive to where this script is stored.
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+
 # Create paths for a backup directory and log file!
-BACKUP_DIR="./backups"
+BACKUP_DIR="$SCRIPT_DIR/backups"
 LOG_FILE="$BACKUP_DIR/backup.log"
 
 if [[ "$option" = "-i" ]]; then      # if option vairable is -i we are doing integrity check 
@@ -90,11 +93,9 @@ else                      # if given input does not match any of the available o
 fi
 
 # check if the backup directory exists. if it doesn't create it
-if [[ "$option" = "-c" ]]; then
+if [[ "$option" = "-c" || "$option" = "-s" ]]; then
 	if [[ ! -d "$BACKUP_DIR" ]]; then
-		mkdir -p "$BACKUP_DIR"
-
-		if [[ $? -ne 0 ]]; then # if the output of the prior if statement is not 0 exit, error at created the directory
+		if ! mkdir -p "$BACKUP_DIR"; then # if mkdir does not run successfully, error at created the directory
 			echo "Error, unable to create backup directory"
 			echo "Exiting..."
 			exit 8
@@ -111,6 +112,7 @@ case "$option" in
 		echo "Compressing and archiving $directory ..."
 		if tar --exclude="./backups" -czvf "$backupFile" "$directory"; then
 			echo "Backup created."
+			echo "[$(date +"%Y-%m-%d %H:%M:%S")] SUCCESS: $backupFile archived successfully." >> "$LOG_FILE"
 		else
 			echo "An error occured while creating a backup."
 			echo "Backup failed."
@@ -126,8 +128,38 @@ case "$option" in
 	-u)
 		
 		;;
-	-s)
-		
+	-s) # allow user to schedule cron job to schedule backups!
+		echo "-----------------------------------------------------------"
+		echo ""
+		echo "                   BACKUP SCHEDULING                       "
+		echo ""
+		echo "-----------------------------------------------------------"
+		echo ""
+		echo "Please select the frequency at which you would like backups to be performed:"
+		echo "" 
+		echo "1. Hourly"
+		echo "2. Daily"
+		echo "3. Weekly"
+		echo ""
+		read -p "Enter your choice: " frequency
+
+		case "$frequency" in
+		1)
+			schedule="0 * * * *"
+			;;
+		2)
+			schedule="0 0 * * *"
+			;;
+		3)
+			schedule="0 0 * * 0"
+			;;
+		*)
+			echo "Invalid choice. Please enter 1, 2, or 3 next time"
+			echo "Exiting"
+			exit 9
+			;;
+		esac
+
 		;;
 	*)
 		
