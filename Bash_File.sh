@@ -105,10 +105,11 @@ fi
 
 case "$option" in 
 	-c) # create a compressed backup of directory
-		timestamp=$(date +"%Y-%m-%d_%H%M%S")
-		backupFile="${BACKUP_DIR}/${directory}_${timestamp}.tar.gz"
+		timestamp=$(date +"%Y-%m-%d_%H%M%S")   #create a timestamp variable that we will use to date backup files
+		directoryName=$(basename "$directory")     # get the basename of the directory the user provided
+		backupFile="${BACKUP_DIR}/${directoryName}_${timestamp}.tar.gz"
 		echo "Compressing and archiving $directory ..."
-		if tar -czvf "$backupFile" "$directory"; then
+		if tar --exclude="./backups" -czvf "$backupFile" "$directory"; then
 			echo "Backup created."
 		else
 			echo "An error occured while creating a backup."
