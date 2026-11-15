@@ -42,6 +42,10 @@
 
 option=$1    # set user's first arguement to option variable
 
+# Create paths for a backup directory and log file!
+BACKUP_DIR="./backups"
+LOG_FILE="$BACKUP_DIR/backup.log"
+
 if [[ "$option" = "-i" ]]; then      # if option vairable is -i we are doing integrity check 
 	backupFile=$2				# set backupFile variable to user's second argument
 
@@ -60,14 +64,12 @@ if [[ "$option" = "-i" ]]; then      # if option vairable is -i we are doing int
 		echo "Exiting..."
 		exit 3
 	fi
-
-elif [[ "$option" = "-c" | "$option" = "-r" | "$option" = "-u" | "$option" = "-s" ]]; then # if option variable is any of the other options
+elif [[ "$option" = "-c" || "$option" = "-r" || "$option" = "-u" || "$option" = "-s" ]]; then # if option variable is any of the other options
 	directory=$2              # set directory variable to user's second argument
 
 	if [[ -z "$directory" ]]; then # if no directory provided use current working directory
 		directory="."
 	fi
-
 	if [[ ! -d "$directory" ]]; then
 		echo "Error, provided directory doesn't exist."
 		echo "Exiting."
@@ -81,32 +83,44 @@ elif [[ "$option" = "-c" | "$option" = "-r" | "$option" = "-u" | "$option" = "-s
 		echo "Incorrect directory permissions. Please use chmod to update directories permissions."
 		exit 6
 	fi
-
-
-else; then                        # if given input does not match any of the available ones then exit
+else                      # if given input does not match any of the available ones then exit
 	echo "Error. Incorrect option provided. Please use one of five available options."
 	echo "Exiting..."
-	exit 4
-
+	exit 7
 fi
 
-case "$option" in 
-	-c)
+# check if the backup directory exists. if it doesn't create it
+if [[ "$option" = "-c" ]]; then
+	if [[ ! -d "$BACKUP_DIR" ]]; then
+		mkdir -p "$BACKUP_DIR"
 
+		if [[ $? -ne 0 ]]; then
+			echo "Error, unable to create backup directory"
+			echo "Exiting..."
+			exit 8
+		fi
+	fi
+fi
+
+
+case "$option" in 
+	-c) # create a compressed backup of directory
+		echo "Compressing and archiving $directory ..."
+		tar -czvf "$directory".tar.gz "$directory"
 		;;
 	-i)
-
+		
 		;;
 	-r)
-
+		## remember to add write permissions check once the user gives destination to put restoration
 		;;
 	-u)
-
+		
 		;;
 	-s)
-
+		
 		;;
 	*)
-
+		
 		;;
 esac
