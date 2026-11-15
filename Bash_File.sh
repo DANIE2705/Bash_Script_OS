@@ -44,10 +44,10 @@ option=$1
 backupFile=$2
 
 
-if [[ "$option" = "-c" ]] ; then
-	#backupFile=$2
-elif [[ "$option" = "-i" ]] ; then
-	if (( -e "$option" )) ; then
+if [[ "$option" == "-c" ]] ; then
+	#
+elif [[ "$option" == "-i" ]] ; then
+	if (( -e "$backupFile" )) ; then
 			#the archive has normal and possibly not normal
 			# output then send it to the 
 			#kali linux black hole where everything get's deleted,
@@ -55,57 +55,60 @@ elif [[ "$option" = "-i" ]] ; then
 			#but if 2 (the error output) is present with 1 (regular
 			#output) then the archive integrity is violated because 
 			#there is an error output.
-			if [[ "$backupfile" == *.tar ]] ; then
+			if [[ "$backupFile" == *.tar ]] ; then
 				if tar -tf "$backupfile" > /dev/null 2>&1 ; then
 					echo "Archive integrity check passed."
 				else
 					echo "Archive integrity check failed."
 				fi
 				exit 0
-			elif [[ "$backupfile" == *.gz ]] ; then
+			elif [[ "$backupFile" == *.gz ]] ; then
 				if tar -tzf "$backupfile" > /dev/null 2>&1 ; then
 					echo "Archive integrity check passed."
 				else
 					echo "Archive integrity check failed."
 				fi
 				exit 0
-			elif [[ "$backupfile" == *.zip ]] ; then
+			elif [[ "$backupFile" == *.zip ]] ; then
 				if unzip -t "$backupfile" > /dev/null 2>&1 ; then
 					echo "Archive integrity check passed."
 				else
 					echo "Archive integrity check failed."
 				fi
 				exit 0
-		else
-			echo "Error. An archive was not provided..."
-			echo "Exiting..."
-			exit 2
-		fi
+			else
+				echo "Error. An archive was not provided..."
+				echo "Exiting..."
+				exit 2
+			fi
 	else
 		echo "This archive does not exsist..."
 		echo "Exiting..."
 		exit 3
 	fi
-elif ( "$option" = "-r" ) ; then
+elif [[ "$option" == "-r" ]] ; then
+	#if ( -e -d "") ; then
+	#	backupfileUnzip =$(unzip -t "$backupFile")
+	#	if "$opiton" = $backupfileUnzip; then
+	#		echo "The current directory is the same as the back up...\n"
+	#	else
+	#		echo "Error occurred ... Exiting.."
+	#		exit 3
+	#	fi
+	#else
+	#	echo "Option specified is not a directory or does not... Exiting.."
+	#	exit 4
+	#fi
+elif [[ "$option" == "-u" ]] ; then
 
-elif ( "$option" = "-u" ) ; then
-	if ( -e -d "") ; then
-		backupfileUnzip = unzip -t "$backupfile"
-		if "$opiton" = $backupfileUnzip; then
-			echo "The current directory is the same as the back up...\n"
-		else
-			echo "Error occurred ... Exiting.."
-			exit 3
-		fi
-	else
-		echo "Option specified is not a directory or does not... Exiting.."
-		exit 4
-	fi
+elif [[ "$option" == "-s" ]] ; then
+
 else
 	echo "Error. Incorrect option provided. Please use one of five available options."
 	echo "Exiting..."
 	exit 1
 fi
+
 exit 0
 
 #References
