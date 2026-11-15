@@ -44,9 +44,9 @@ option=$1
 backupFile=$2
 
 
-if ( "$option" = "-c" ) ; then
+if [[ "$option" = "-c" ]] ; then
 	#backupFile=$2
-elif ( "$option" = "-i" ) ; then
+elif [[ "$option" = "-i" ]] ; then
 	if (( -e "$option" )) ; then
 			#the archive has normal and possibly not normal
 			# output then send it to the 
