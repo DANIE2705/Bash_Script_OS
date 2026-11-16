@@ -143,15 +143,15 @@ case "$option" in
 		echo ""
 		read -p "Enter your choice: " frequency
 
-		case "$frequency" in
+		case "$frequency" in # based on which frequency the user chose create a schedule variable with cron execution string variables
 		1)
-			schedule="0 * * * *"
+			schedule="0 * * * *" # every hour
 			;;
 		2)
-			schedule="0 0 * * *"
+			schedule="0 0 * * *" # every day at midnight
 			;;
 		3)
-			schedule="0 0 * * 0"
+			schedule="0 0 * * 0" # every sundary at midnight
 			;;
 		*)
 			echo "Invalid choice. Please enter 1, 2, or 3 next time"
@@ -159,9 +159,42 @@ case "$option" in
 			exit 9
 			;;
 		esac
-
+		
+		SCRIPT_PATH="$(realpath "$0")" # get the absolute path of the script
+		DIRECTORY_PATH="$(realpath "$directory")" # get the absolute path of the directory
+		
+		cronCommand="\"$SCRIPT_PATH\" -c \"$DIRECTORY_PATH\"" # create the cron command that we will ask cron to do on a schedule
+		existingJobs=$(crontab -l 2>/dev/null) # get the existing cron jobs
+		newJobs="$schedule $cronCommand" # create the new scheduled backup job
+		
+		# check whether the backup is already scheduled
+		if echo "$existingJobs" | grep -Fq "$cronCommand"; then
+			echo "There is already a scheduled backup for this directory"
+			echo "Exiting..."
+			exit 10
+		fi
+		
+		# combine that new job with the preexisting jobs
+		if {
+			echo "$existingJobs" 
+			echo "$newJobs"
+		} | crontab -; then         # if no errors given while adding new job to existing jobs
+			echo "Backup successfully scheduled!"
+		else
+			echo "Error. Unable to schedule backup."
+			echo "Exiting..."
+			exit 11
+		fi
+		
+		echo ""
+		echo "Selected schedule: $schedule"
+		echo "Script path: $SCRIPT_PATH"
+		echo "Directory path: $DIRECTORY_PATH"
+		echo "Cron command: $cronCommand"
 		;;
 	*)
-		
+		echo "Error. Incorrect option provided. Please use one of five available options."
+		echo "Exiting..."
+		exit 10
 		;;
 esac
