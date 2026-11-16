@@ -2,7 +2,7 @@
 
 #OS task to be automated: Backup and Recovery Manager
 
-#Brief Explanation: My group plans to develop a bash script that will automate the process of creating compressed backups of selected 
+#Brief Explanation: Our group plans to develop a bash script that will automate the process of creating compressed backups of selected 
 #directories, checking backup integrity, creating logs of backups, and restoring files when needed.
 #The script will also compare current files with previous backups to identify added, modified, or deleted files and support automated 
 #backup scheduling. Users that use this script are also able to specific which backup version they want to recover to. 
@@ -90,7 +90,7 @@ elif [[ "$option" = "-c" || "$option" = "-r" || "$option" = "-u" || "$option" = 
 		echo "Incorrect directory permissions. Please use chmod to update directories permissions."
 		exit 6
 	fi
-else                      # if given input does not match any of the available ones then exit
+else  # if given input does not match any of the available ones then exit
 	echo "Error. Incorrect option provided. Please use one of five available options."
 	echo "Exiting..."
 	exit 7
@@ -118,7 +118,8 @@ case "$option" in
 			echo "Backup created."
 			echo "[$(date +"%Y-%m-%d %H:%M:%S")] SUCCESS: $backupFile archived successfully." >> "$LOG_FILE"
 		else
-			echo "An error occured while creating a backup."
+			echo "[$(date +"%Y-%m-%d %H:%M:%S")] FAILED: Backup creation failed." >> "$LOG_FILE"
+			echo "An error occurred while creating a backup."
 			echo "Backup failed."
 			rm -f "$backupFile"
 		fi
@@ -152,11 +153,51 @@ case "$option" in
 
 		else
 			echo "Unsupported archive format."
-			exit 12
+			exit 9
 		fi
 		;;
 	-r)
 		## remember to add write permissions check once the user gives destination to put restoration
+		directoryName=$(basename "$directory")
+
+		backups=($(ls -1 "${BACKUP_DIR}/${directoryName}"_*.tar.gz | sort -r))
+
+		if [[ ! -e "${backups[0]}" ]] ; then
+			echo "No backups found for $directoryName"
+			exit 10
+		fi
+
+		echo ""
+		echo "Available backups:"
+		echo ""
+
+		for i in "${!backups[@]}"
+		do
+			echo "$((i+1))) $(basename "${backups[$i]}")"
+		done
+
+		echo ""
+		read -p "Choose a backup version: " choice
+
+		selectedBackup="${backups[$((choice-1))]}"
+
+		if [[ -z "$selectedBackup" ]] ; then
+			echo "Invalid backup selection."
+			exit 11
+		fi
+
+		echo ""
+		echo "Restoring $(basename "$selectedBackup")"
+
+		mkdir -p restored_files
+		if tar -xzf "$selectedBackup" -C restored_files; then
+			echo "Restore complete."
+		else
+			echo "Restore failed."
+			exit 12
+		fi
+		;;
+	-u)
 		directoryName=$(basename "$directory")
 
 		backups=("${BACKUP_DIR}/${directoryName}"_*.tar.gz)
@@ -176,54 +217,19 @@ case "$option" in
 		done
 
 		echo ""
+
 		read -p "Choose a backup version: " choice
 
-		selectedBackup="${backups[$((choice-1))]}"
-
-		if [[ -z "$selectedBackup" ]] ; then
-			echo "Invalid backup selection."
+		if ! [[ "$choice" =~ ^[0-9]+$ ]]; then
+			echo "Invalid selection."
 			exit 14
 		fi
 
-		echo ""
-		echo "Restoring $(basename "$selectedBackup")"
-
-		mkdir -p restored_files
-		if tar -xzf "$selectedBackup" -C restored_files; then
-			echo "Restore complete."
-		else
-			echo "Restore failed."
-			exit 15
-		fi
-		;;
-	-u)
-		directoryName=$(basename "$directory")
-
-		backups=("${BACKUP_DIR}/${directoryName}"_*.tar.gz)
-
-		if [[ ! -e "${backups[0]}" ]] ; then
-			echo "No backups found for $directoryName"
-			exit 16
-		fi
-
-		echo ""
-		echo "Available backups:"
-		echo ""
-
-		for i in "${!backups[@]}"
-		do
-			echo "$((i+1))) $(basename "${backups[$i]}")"
-		done
-
-		echo ""
-
-		read -p "Choose backup version: " choice
-
 		selectedBackup="${backups[$((choice-1))]}"
-
+		
 		if [[ -z "$selectedBackup" ]] ; then
 			echo "Invalid backup selection."
-			exit 17
+			exit 15
 		fi
 
 		mkdir -p temp_compare
@@ -235,9 +241,10 @@ case "$option" in
 		if ! tar -xzf "$selectedBackup" -C temp_compare; then
 			echo "Unable to extract backup."
 			rm -rf temp_compare
-			exit 18
+			exit 16
 		fi
-		comparison=$(diff -rq "$directory" "temp_compare/$directory")
+
+		comparison=$(diff -rq "$directory" "temp_compare/$directoryName")
 
 		echo "===== Added Files ====="
 		echo "$comparison" | grep "^Only in $directory" || echo "None"
@@ -280,7 +287,7 @@ case "$option" in
 		*)
 			echo "Invalid choice. Please enter 1, 2, or 3 next time"
 			echo "Exiting"
-			exit 9
+			exit 17
 			;;
 		esac
 		
@@ -295,7 +302,7 @@ case "$option" in
 		if echo "$existingJobs" | grep -Fq "$cronCommand"; then
 			echo "There is already a scheduled backup for this directory"
 			echo "Exiting..."
-			exit 10
+			exit 18
 		fi
 		
 		# combine that new job with the preexisting jobs
@@ -307,7 +314,7 @@ case "$option" in
 		else
 			echo "Error. Unable to schedule backup."
 			echo "Exiting..."
-			exit 11
+			exit 19
 		fi
 		
 		echo ""
@@ -319,6 +326,6 @@ case "$option" in
 	*)
 		echo "Error. Incorrect option provided. Please use one of five available options."
 		echo "Exiting..."
-		exit 10
+		exit 20
 		;;
 esac
