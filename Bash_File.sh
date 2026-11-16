@@ -45,32 +45,26 @@ backupFile=$2
 
 
 if [[ "$option" == "-c" ]] ; then
-	#
+	#Kate's Section 
+
 elif [[ "$option" == "-i" ]] ; then
-	if (( -e "$backupFile" )) ; then
-			#the archive has normal and possibly not normal
-			# output then send it to the 
-			#kali linux black hole where everything get's deleted,
-			#(which is the /dev/null path in the system)
-			#but if 2 (the error output) is present with 1 (regular
-			#output) then the archive integrity is violated because 
-			#there is an error output.
+	if [[ -e "$backupFile" ]] ; then
 			if [[ "$backupFile" == *.tar ]] ; then
-				if tar -tf "$backupfile" > /dev/null 2>&1 ; then
+				if tar -tf "$backupFile" > /dev/null 2>&1 ; then
 					echo "Archive integrity check passed."
 				else
 					echo "Archive integrity check failed."
 				fi
 				exit 0
-			elif [[ "$backupFile" == *.gz ]] ; then
-				if tar -tzf "$backupfile" > /dev/null 2>&1 ; then
+			elif [[ "$backupFile" == *.tar.gz ]] ; then
+				if tar -tzf "$backupFile" > /dev/null 2>&1 ; then
 					echo "Archive integrity check passed."
 				else
 					echo "Archive integrity check failed."
 				fi
 				exit 0
 			elif [[ "$backupFile" == *.zip ]] ; then
-				if unzip -t "$backupfile" > /dev/null 2>&1 ; then
+				if unzip -t "$backupFile" > /dev/null 2>&1 ; then
 					echo "Archive integrity check passed."
 				else
 					echo "Archive integrity check failed."
@@ -87,33 +81,101 @@ elif [[ "$option" == "-i" ]] ; then
 		exit 3
 	fi
 elif [[ "$option" == "-r" ]] ; then
-	#if ( -e -d "") ; then
-	#	backupfileUnzip =$(unzip -t "$backupFile")
-	#	if "$opiton" = $backupfileUnzip; then
-	#		echo "The current directory is the same as the back up...\n"
-	#	else
-	#		echo "Error occurred ... Exiting.."
-	#		exit 3
-	#	fi
-	#else
-	#	echo "Option specified is not a directory or does not... Exiting.."
-	#	exit 4
-	#fi
+	if [[ -e "$backupFile" ]] ; then
+		backups=(backups/${backupFile}_backup*)
+
+		if [[ ! -e "${backups[0]}" ]] ; then
+			echo "No backups found for $backupFile"
+			exit 4
+		else
+			echo "Available backups:"
+
+			for i in "${!backups[@]}"
+			do
+				echo "$((i+1))) ${backups[$i]}"
+			done
+
+			read -p "Choose a backup version: " choice
+
+			selectedBackup="${backups[$((choice-1))]}"
+			if [[ -z "$selectedBackup" ]] ; then
+				echo "Invalid backup selection."
+				exit 7
+			else
+			echo "Restoring $selectedBackup..."
+			
+			echo "Restoring $selectedBackup..."
+
+			if [[ "$selectedBackup" == *.tar.gz ]] ; then
+				tar -xzf "$selectedBackup"
+			elif [[ "$selectedBackup" == *.tar ]] ; then
+				tar -xf "$selectedBackup"
+			elif [[ "$selectedBackup" == *.zip ]] ; then
+				unzip "$selectedBackup"
+			else
+				echo "Restore not complete...Terminating..."
+				exit 8
+			fi
+
+			echo "Restore complete."
+			exit 0
+			fi
+		fi
+	else 
+		echo "This archive does not exsist..."
+		echo "Exiting..."
+		exit 5
+	fi
 elif [[ "$option" == "-u" ]] ; then
-
+	if [[ -e "$backupFile" ]] ; then
+		backups=(backups/${backupFile}_backup*)
+	 
+		if [[ ! -e "${backups[0]}" ]] ; then
+			echo "No backups found."
+			exit 5
+		else
+			
+			echo "Available backups:"
+			
+			for i in "${!backups[@]}" ; do
+				echo "$((i+1))) ${backups[$i]}"
+			done
+				 
+			read -p "Choose backup version: " choice
+			selectedBackup="${backups[$((choice-1))]}"
+			if [[ -z "$selectedBackup" ]] ; then
+				echo "Invalid backup selection."
+				exit 7
+			fi
+				 
+			mkdir -p temp_compare
+			if [[ "$selectedBackup" == *.tar.gz ]] ; then
+				tar -xzf "$selectedBackup" -C temp_compare
+			elif [[ "$selectedBackup" == *.tar ]] ; then
+				tar -xf "$selectedBackup" -C temp_compare
+			fi
+				
+			diff -rq "$backupFile" "temp_compare/$backupFile"
+			# Verify archive extraction structure (I should see how Kate did hers)
+			rm -rf temp_compare
+			exit 0
+		fi
+	else
+		echo "This archive does not exsist..."
+		echo "Exiting..."
+		exit 6
+	fi
 elif [[ "$option" == "-s" ]] ; then
-
+	if [[ -e "$backupFile" ]] ; then
+		
+	else
+		echo "This archive does not exsist..."
+		echo "Exiting..."
+		exit 9
+	fi
 else
 	echo "Error. Incorrect option provided. Please use one of five available options."
 	echo "Exiting..."
 	exit 1
 fi
-
 exit 0
-
-#References
-
-#For option -i (Checking the integrity of the backup file)
-#-https://linuxvox.com/blog/what-does-dev-null-mean-at-the-end-of-shell-commands/
-#-https://www.geeksforgeeks.org/linux-unix/tar-command-linux-examples/
-#-https://stackoverflow.com/questions/10508843/what-is-dev-null-21 
