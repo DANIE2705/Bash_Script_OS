@@ -41,8 +41,8 @@
 # ./Bash_File.sh -s directoryName
 
 #Extra Credit - option 6
-# Using -s indicates a user wishes to schedule automated backups of a provided Directory
-# ./Bash_File.sh -s directoryName
+# ---
+# ./Bash_File.sh -d directoryName
 
 option=$1    # set user's first arguement to option variable
 
