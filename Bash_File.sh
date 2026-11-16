@@ -114,7 +114,7 @@ case "$option" in
 		directoryName=$(basename "$directory")     # get the basename of the directory the user provided
 		backupFile="${BACKUP_DIR}/${directoryName}_${timestamp}.tar.gz"
 		echo "Compressing and archiving $directory ..."
-		if tar --exclude="./backups" -czvf "$backupFile" "$directory"; then
+		if tar --exclude="$BACKUP_DIR" -czvf "$backupFile" "$directory"; then
 			echo "Backup created."
 			echo "[$(date +"%Y-%m-%d %H:%M:%S")] SUCCESS: $backupFile archived successfully." >> "$LOG_FILE"
 		else
@@ -188,7 +188,8 @@ case "$option" in
 		echo ""
 		echo "Restoring $(basename "$selectedBackup")"
 
-		if tar -xzf "$selectedBackup"; then
+		mkdir -p restored_files
+		if tar -xzf "$selectedBackup" -C restored_files; then
 			echo "Restore complete."
 		else
 			echo "Restore failed."
@@ -227,12 +228,15 @@ case "$option" in
 
 		mkdir -p temp_compare
 
-		tar -xzf "$selectedBackup" -C temp_compare
-
 		echo ""
 		echo "Comparing current directory against backup..."
 		echo ""
 
+		if ! tar -xzf "$selectedBackup" -C temp_compare; then
+			echo "Unable to extract backup."
+			rm -rf temp_compare
+			exit 18
+		fi
 		comparison=$(diff -rq "$directory" "temp_compare/$directory")
 
 		echo "===== Added Files ====="
@@ -318,5 +322,3 @@ case "$option" in
 		exit 10
 		;;
 esac
-option=$1
-backupFile=$2
