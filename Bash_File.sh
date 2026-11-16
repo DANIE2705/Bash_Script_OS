@@ -40,6 +40,10 @@
 # Using -s indicates a user wishes to schedule automated backups of a provided Directory
 # ./Bash_File.sh -s directoryName
 
+#Extra Credit - option 6
+# Using -s indicates a user wishes to schedule automated backups of a provided Directory
+# ./Bash_File.sh -s directoryName
+
 option=$1    # set user's first arguement to option variable
 
 # Make sure that path for automated cron backups is realtive to where this script is stored.
@@ -120,13 +124,129 @@ case "$option" in
 		fi
 		;;
 	-i)
-		
+		echo "Checking archive integrity..."
+
+		if [[ "$backupFile" == *.tar ]] ; then
+
+			if tar -tf "$backupFile" > /dev/null 2>&1 ; then
+				echo "Archive integrity check passed."
+			else
+				echo "Archive integrity check failed."
+			fi
+
+		elif [[ "$backupFile" == *.tar.gz ]] ; then
+
+			if tar -tzf "$backupFile" > /dev/null 2>&1 ; then
+				echo "Archive integrity check passed."
+			else
+				echo "Archive integrity check failed."
+			fi
+
+		elif [[ "$backupFile" == *.zip ]] ; then
+
+			if unzip -t "$backupFile" > /dev/null 2>&1 ; then
+				echo "Archive integrity check passed."
+			else
+				echo "Archive integrity check failed."
+			fi
+
+		else
+			echo "Unsupported archive format."
+			exit 12
+		fi
 		;;
 	-r)
 		## remember to add write permissions check once the user gives destination to put restoration
+		directoryName=$(basename "$directory")
+
+		backups=("${BACKUP_DIR}/${directoryName}"_*.tar.gz)
+
+		if [[ ! -e "${backups[0]}" ]] ; then
+			echo "No backups found for $directoryName"
+			exit 13
+		fi
+
+		echo ""
+		echo "Available backups:"
+		echo ""
+
+		for i in "${!backups[@]}"
+		do
+			echo "$((i+1))) $(basename "${backups[$i]}")"
+		done
+
+		echo ""
+		read -p "Choose a backup version: " choice
+
+		selectedBackup="${backups[$((choice-1))]}"
+
+		if [[ -z "$selectedBackup" ]] ; then
+			echo "Invalid backup selection."
+			exit 14
+		fi
+
+		echo ""
+		echo "Restoring $(basename "$selectedBackup")"
+
+		if tar -xzf "$selectedBackup"; then
+			echo "Restore complete."
+		else
+			echo "Restore failed."
+			exit 15
+		fi
 		;;
 	-u)
-		
+		directoryName=$(basename "$directory")
+
+		backups=("${BACKUP_DIR}/${directoryName}"_*.tar.gz)
+
+		if [[ ! -e "${backups[0]}" ]] ; then
+			echo "No backups found for $directoryName"
+			exit 16
+		fi
+
+		echo ""
+		echo "Available backups:"
+		echo ""
+
+		for i in "${!backups[@]}"
+		do
+			echo "$((i+1))) $(basename "${backups[$i]}")"
+		done
+
+		echo ""
+
+		read -p "Choose backup version: " choice
+
+		selectedBackup="${backups[$((choice-1))]}"
+
+		if [[ -z "$selectedBackup" ]] ; then
+			echo "Invalid backup selection."
+			exit 17
+		fi
+
+		mkdir -p temp_compare
+
+		tar -xzf "$selectedBackup" -C temp_compare
+
+		echo ""
+		echo "Comparing current directory against backup..."
+		echo ""
+
+		comparison=$(diff -rq "$directory" "temp_compare/$directory")
+
+		echo "===== Added Files ====="
+		echo "$comparison" | grep "^Only in $directory" || echo "None"
+
+		echo ""
+		echo "===== Deleted Files ====="
+		echo "$comparison" | grep "^Only in temp_compare" || echo "None"
+
+		echo ""
+		echo "===== Modified Files ====="
+		echo "$comparison" | grep "^Files" || echo "None"
+
+		rm -rf temp_compare
 		;;
 	-s) # allow user to schedule cron job to schedule backups!
 		echo "-----------------------------------------------------------"
@@ -198,3 +318,5 @@ case "$option" in
 		exit 10
 		;;
 esac
+option=$1
+backupFile=$2
