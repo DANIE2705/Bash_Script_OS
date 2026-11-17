@@ -255,7 +255,7 @@ case "$option" in
 
 		rm -rf temp_compare
 		;;
-	-s) 
+	-s)  
 		echo "-----------------------------------------------------------"
 		echo ""
 		echo "                   BACKUP SCHEDULING                       "
