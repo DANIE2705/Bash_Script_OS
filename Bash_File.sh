@@ -40,10 +40,6 @@
 # Using -s indicates a user wishes to schedule automated backups of a provided Directory
 # ./Bash_File.sh -s directoryName
 
-#Extra Credit - option 6
-# ---
-# ./Bash_File.sh -d directoryName
-
 option=$1    # set user's first arguement to option variable
 
 # Make sure that path for automated cron backups is realtive to where this script is stored.
@@ -109,7 +105,7 @@ fi
 
 
 case "$option" in 
-	-c) # create a compressed backup of directory
+	-c) # create a compressed backup of directory 
 		timestamp=$(date +"%Y-%m-%d_%H%M%S")   #create a timestamp variable that we will use to date backup files
 		directoryName=$(basename "$directory")     # get the basename of the directory the user provided
 		backupFile="${BACKUP_DIR}/${directoryName}_${timestamp}.tar.gz"
@@ -200,7 +196,7 @@ case "$option" in
 	-u)
 		directoryName=$(basename "$directory")
 
-		backups=("${BACKUP_DIR}/${directoryName}"_*.tar.gz)
+		backups=($(ls -1 "${BACKUP_DIR}/${directoryName}"_*.tar.gz | sort -r))
 
 		if [[ ! -e "${backups[0]}" ]] ; then
 			echo "No backups found for $directoryName"
